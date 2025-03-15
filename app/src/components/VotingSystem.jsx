@@ -1,21 +1,37 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import '../components/VotingSystem.css'
+import '../components/VotingSystem.css';
+
 const VotingSystem = () => {
     const [parties, setParties] = useState([]);
     const [hasVoted, setHasVoted] = useState(false);
     const [message, setMessage] = useState("");
 
-    // Fetch parties data
+    
+   const partyImages = {
+    "Bharat Rashtra Samithi": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Bharat_Rashtra_Samithi_symbol.png",
+    "Indian National Congress": "https://upload.wikimedia.org/wikipedia/commons/5/5d/Indian_National_Congress_hand_logo.png",
+    "Aam Aadmi Party": "https://upload.wikimedia.org/wikipedia/commons/d/d7/Aam_Aadmi_Party_Election_Symbol.png",
+    "Telugu Desam Party": "https://upload.wikimedia.org/wikipedia/commons/9/92/Telugu_Desam_Party_flag.png",
+    "Dravida Munnetra Kazhagam": "https://upload.wikimedia.org/wikipedia/commons/d/d1/DMK_Symbol_Rising_Sun.png"
+};
+
+    
     useEffect(() => {
         axios.get("http://localhost:5000/parties")
-            .then(response => setParties(response.data))
+            .then(response => {
+                const updatedParties = response.data.map(party => ({
+                    ...party,
+                    symbol: partyImages[party.partyName] || "https://via.placeholder.com/100"
+                }));
+                setParties(updatedParties);
+            })
             .catch(error => console.error("Error fetching data:", error));
     }, []);
 
-    // Vote function
+
     const vote = (partyId) => {
-        if (hasVoted) return; // Prevent multiple votes
+        if (hasVoted) return;
 
         axios.post(`http://localhost:5000/vote/${partyId}`)
             .then(response => {
@@ -31,26 +47,24 @@ const VotingSystem = () => {
     };
 
     return (
-        <div>
+        <div className="container">
             <h1>Vote for Your Favorite Party</h1>
-            {message && <p style={{ color: "green", fontWeight: "bold" }}>{message}</p>}
-            <ul>
+            {message && <p className="message">{message}</p>}
+            <ul className="party-list">
                 {parties.map(party => (
-                    <li key={party.id} style={{ marginBottom: "10px" }}>
-                        {party.partyName} - Votes: {party.votes || 0} 
-                        <button 
-                            onClick={() => vote(party.id)}
-                            disabled={hasVoted}
-                            style={{
-                                marginLeft: "10px",
-                                padding: "5px 10px",
-                                backgroundColor: hasVoted ? "gray" : "blue",
-                                color: "white",
-                                cursor: hasVoted ? "not-allowed" : "pointer"
-                            }}
-                        >
-                            {hasVoted ? "Voted" : "Vote"}
-                        </button>
+                    <li key={party.id} className="party-card">
+                        <img src={party.symbol} alt={party.partyName} className="party-symbol" />
+                        <div className="party-info">
+                            <h3>{party.partyName}</h3>
+                            {/* <p>Votes: {party.votes || 0}</p> */}
+                            <button 
+                                onClick={() => vote(party.id)}
+                                disabled={hasVoted}
+                                className="vote-button"
+                            >
+                                {hasVoted ? "Voted" : "Vote"}
+                            </button>
+                        </div>
                     </li>
                 ))}
             </ul>
